@@ -3,13 +3,16 @@
 clear
 % clc
 
+load("ACC_el.mat");
+% ACC_el = ACC_el(1:30000,:);
+
 M = [2 0 0;
     0 1.5 0
     0 0 1];
 K = 600* [5 -2 0;
     -2 3 -1;
     0 -1 1];
-
+diagM = diag(M);
 [V,D]=eig(inv(M)*K);
 freq=diag(D).^0.5;
 [Bc,ord] = sort(freq);                  %ord为记录顺序的向量
@@ -43,7 +46,7 @@ PhiT_ = M * VV * Mn^(-1);
 Cn = 2 * 0.005 * wn * Mn;
 C = PhiT_ * Cn * Phi_;
 C = zeros(3,3);
-load("ACC_el.mat");
+
 
 
 % Pn1 = (VV(:,1)' * (ACC_el(i, 2) * [1;1;1]));
@@ -56,32 +59,47 @@ qn2 = zeros(length(ACC_el),1);
 qn3 = zeros(length(ACC_el),1);
 uu = zeros(3,length(ACC_el));
 
-syms t
+% wd1 = w1 * sqrt(1-0.05^2);
+% wd2 = w2 * sqrt(1-0.05^2);
+% wd3 = w3 * sqrt(1-0.05^2);
 
-for i = 2:55000
-%     qn1(i) = qn1(i-1) + (1 / (M1*w1)) * (0.001 * ((VV(:,1)' * (ACC_el(i, 2) * [1;1;1])) * sin(w1 * (55 - i * 0.001))));
-%     qn2(i) = qn2(i-1) + (1 / (M2*w2)) * (0.001 * ((VV(:,2)' * (ACC_el(i, 2) * [1;1;1])) * sin(w2 * (55 - i * 0.001))));
-%     qn3(i) = qn3(i-1) + (1 / (M3*w3)) * (0.001 * ((VV(:,3)' * (ACC_el(i, 2) * [1;1;1])) * sin(w3 * (55 - i * 0.001))));
-%     qn1(i) = qn1(i) + (1 / (M1*w1)) * (0.001 * ((VV(:,1)' * (ACC_el(i, 2) * [1;1;1])) * sin(w1 * (i * 0.001))));
-%     qn2(i) = qn2(i) + (1 / (M2*w2)) * (0.001 * ((VV(:,2)' * (ACC_el(i, 2) * [1;1;1])) * sin(w2 * (i * 0.001))));
-%     qn3(i) = qn3(i) + (1 / (M3*w3)) * (0.001 * ((VV(:,3)' * (ACC_el(i, 2) * [1;1;1])) * sin(w3 * (i * 0.001))));
-%     qn1(i) = qn1(i-1) + ((1 / (M1*w1)) * (0.001 * ((VV(:,1)' * (ACC_el(i, 2) * [1;1;1])) * sin(w1 * (55 - i * 0.001)))));
-%     qn2(i) = qn2(i-1) + ((1 / (M2*w2)) * (0.001 * ((VV(:,2)' * (ACC_el(i, 2) * [1;1;1])) * sin(w2 * (55 - i * 0.001)))));
-%     qn3(i) = qn3(i-1) + ((1 / (M3*w3)) * (0.001 * ((VV(:,3)' * (ACC_el(i, 2) * [1;1;1])) * sin(w3 * (55 - i * 0.001)))));
-    qn1(i) = (1 / (M1*w1)) * int( sin(2 * t) * sin(w1*(55-t)), 0, i);
-    qn2(i) = (1 / (M2*w2)) * int( sin(2 * t) * sin(w2*(55-t)), 0, i);
-    qn3(i) = (1 / (M3*w3)) * int( sin(2 * t) * sin(w3*(55-t)), 0, i);
-    
-    uu(:,i) = V(:,1) * qn1(i) + V(:,2) * qn2(i) + V(:,3) * qn3(i);
+for i = 1:length(ACC_el)
+    P1(:,i) = VV(:,1)' * (ACC_el(i, 2) * diagM);
+    P2(:,i) = VV(:,2)' * (ACC_el(i, 2) * diagM);
+    P3(:,i) = VV(:,3)' * (ACC_el(i, 2) * diagM);
 end
 
-plot(uu(1,:));
-hold on;
+for i = 0.001:0.001:length(ACC_el)*0.001
+i
+    for ii = 0.001:0.001:i
+        qn1(round(ii*1e3)+1) = qn1(round(ii*1e3)) + 0.001 * (1 / (M1*w1)) * P1(round(ii*1e3)) * sin(w1*(i-ii));
+        qn2(round(ii*1e3)+1) = qn2(round(ii*1e3)) + 0.001 * (1 / (M2*w2)) * P2(round(ii*1e3)) * sin(w2*(i-ii));
+        qn3(round(ii*1e3)+1) = qn3(round(ii*1e3)) + 0.001 * (1 / (M3*w3)) * P3(round(ii*1e3)) * sin(w3*(i-ii));
+    end
+    uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1);
+end
 
 %***********************************************************************************%
-
+C = zeros(3,3);
 dofs = length(M);
 diagM = diag(M);
+dt = 0.001;
+Ke=M/(dt^2)+((C)/(2*dt));                       
+a = K - (2 * M) / (dt)^2;
+b=M/dt^2 - C/(2*dt);
+u = zeros(dofs , 2000);
+v = zeros(dofs , 2000);
+ac = zeros(dofs , 2000);
+
+for i = 2 : length(ACC_el)
+    PP = ACC_el(i,2)* diagM  - a * u(: , i) - b * u(: , i-1);
+    u(:,i+1)=Ke \ PP;                            
+    v(: , i) = (u(: , i+1) - u(: , i-1)) / (dt*2);
+    ac(: , i) = (u(: , i+1) - 2 * u(: , i) + u(: , i-1)) / (dt^2);
+end
+ucdm = u;
+%******************************************************************************%
+C = zeros(3,3);
 alpha = 0.25;
 beta = 0.5;
 dt = 0.001;
@@ -99,14 +117,22 @@ u = zeros(dofs , length(ACC_el));
 v = zeros(dofs , length(ACC_el));
 ac = zeros(dofs , length(ACC_el));
 uuu = u;
-for i = 2:55000
-    PP = -ACC_el(i,2) * [1;1;1] + M * (a0 * u(:,i-1) + a2 * v(:,i-1) + a3 * ac(:,i-1)) + C * (a1 * u(:,i-1) + a4 * v(:,i-1) + a5 * ac(:,i-1));
+for i = 2:length(ACC_el)
+    PP = ACC_el(i,2)* diagM  + M * (a0 * u(:,i-1) + a2 * v(:,i-1) + a3 * ac(:,i-1)) + C * (a1 * u(:,i-1) + a4 * v(:,i-1) + a5 * ac(:,i-1));
     u(:,i) = Ke \ PP;
     uuu(:,i) = u(:,i) + uuu(:,i-1);
     ac(: , i) = a0 * (u(: , i) - u(: , i-1)) - a3 * ac(: , i-1) - a2 * v(: , i-1);
     v(: , i)= v(: , i-1) + a6 * ac(: , i-1) + a7 * ac(: , i);
 end
 
-% plot(u(1,:));
+unmb = u;
+%**********************************************************************%
+
+plot(uu(1,:));
+hold on;
+plot(ucdm(1,:));
+hold on;
+plot(unmb(1,:));
+
 % hold on; 
 % plot(uuu(1,:));
