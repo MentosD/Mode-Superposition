@@ -1,15 +1,17 @@
 %%振型叠加法
+% 使用num2str(i)严重拖慢了运行速度，此脚本中手动编程，取消自动更改变量名
 
 clear
 % clc
 load("MCK1215.mat","C","K","M");
 load("ACC_el.mat");
-M = [2 0 0;
-    0 1.5 0
-    0 0 1];
-K = 600* [5 -2 0;
-    -2 3 -1;
-    0 -1 1];
+% M = [2 0 0;
+%     0 1.5 0
+%     0 0 1];
+% K = 600* [5 -2 0;
+%     -2 3 -1;
+%     0 -1 1];
+
 ACC_el = ACC_el(1:1000,:);
 
 diagM = diag(M);
@@ -25,7 +27,7 @@ for i = 1:length(M)
     VV(:,i) = VV(:,i)/VV(length(M),i);
 end
 
-order = 3;
+order = 10;
 
 Mn = VV' * M * VV;
 for i = 1:order
@@ -50,7 +52,7 @@ Phi_ = Mn^(-1) * VV' * M;
 PhiT_ = M * VV * Mn^(-1);
 Cn = 2 * 0.005 * wn * Mn;
 C = PhiT_ * Cn * Phi_;
-C = zeros(3,3);
+C = zeros(length(M),length(M));
 
 % Pn1 = (VV(:,1)' * (ACC_el(i, 2) * [1;1;1]));
 % Pn2 = (VV(:,2)' * (ACC_el(i, 2) * [1;1;1]));
@@ -72,18 +74,21 @@ end
 for i = 0.001:0.001:length(ACC_el)*0.001
 i
     for ii = 0.001:0.001:i
-            for iii = 1:order
-                eval(['qn',num2str(iii),'(round(ii*1e3)+1) = qn',num2str(iii),'(round(ii*1e3)) + 0.001 * (1 / (M',num2str(iii),'*w',num2str(iii),')) * P',num2str(iii),'(round(ii*1e3)) * sin(w',num2str(iii),'*(i-ii));']);
-            end
+        qn1(round(ii*1e3)+1) = qn1(round(ii*1e3)) + 0.001 * (1 / (M1*w1)) * P1(round(ii*1e3)) * sin(w1*(i-ii));
+        qn2(round(ii*1e3)+1) = qn2(round(ii*1e3)) + 0.001 * (1 / (M2*w2)) * P2(round(ii*1e3)) * sin(w2*(i-ii));
+        qn3(round(ii*1e3)+1) = qn3(round(ii*1e3)) + 0.001 * (1 / (M3*w3)) * P3(round(ii*1e3)) * sin(w3*(i-ii));
+        qn4(round(ii*1e3)+1) = qn4(round(ii*1e3)) + 0.001 * (1 / (M4*w4)) * P4(round(ii*1e3)) * sin(w4*(i-ii));
+        qn5(round(ii*1e3)+1) = qn5(round(ii*1e3)) + 0.001 * (1 / (M5*w5)) * P5(round(ii*1e3)) * sin(w5*(i-ii));
+        qn6(round(ii*1e3)+1) = qn6(round(ii*1e3)) + 0.001 * (1 / (M6*w6)) * P6(round(ii*1e3)) * sin(w6*(i-ii));
+        qn7(round(ii*1e3)+1) = qn7(round(ii*1e3)) + 0.001 * (1 / (M7*w7)) * P7(round(ii*1e3)) * sin(w7*(i-ii));
+        qn8(round(ii*1e3)+1) = qn8(round(ii*1e3)) + 0.001 * (1 / (M8*w8)) * P8(round(ii*1e3)) * sin(w8*(i-ii));
+        qn9(round(ii*1e3)+1) = qn9(round(ii*1e3)) + 0.001 * (1 / (M9*w9)) * P9(round(ii*1e3)) * sin(w9*(i-ii));
+        qn10(round(ii*1e3)+1) = qn10(round(ii*1e3)) + 0.001 * (1 / (M10*w10)) * P10(round(ii*1e3)) * sin(w10*(i-ii));
     end
-    
-    for iiii = 1:order
-        eval(['uu(:,round(i*1e3)) = uu(:,round(i*1e3)) + VV(:,',num2str(iiii),') * qn',num2str(iiii),'(round(i*1e3)+1);']);
-    end
+    uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1)+ VV(:,4) * qn4(round(ii*1e3)+1)+ VV(:,5) * qn5(round(ii*1e3)+1)+ VV(:,6) * qn6(round(ii*1e3)+1)+ VV(:,7) * qn7(round(ii*1e3)+1)+ VV(:,8) * qn8(round(ii*1e3)+1)+ VV(:,9) * qn9(round(ii*1e3)+1)+ VV(:,10) * qn10(round(ii*1e3)+1);
 end
 
 %***********************************************************************************%
-C = zeros(3,3);
 dofs = length(M);
 diagM = diag(M);
 dt = 0.001;
@@ -102,7 +107,6 @@ for i = 2 : length(ACC_el)
 end
 ucdm = u;
 %******************************************************************************%
-C = zeros(3,3);
 alpha = 0.25;
 beta = 0.5;
 dt = 0.001;
