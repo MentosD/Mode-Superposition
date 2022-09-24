@@ -85,7 +85,10 @@ i
         qn9(round(ii*1e3)+1) = qn9(round(ii*1e3)) + 0.001 * (1 / (M9*w9)) * P9(round(ii*1e3)) * sin(w9*(i-ii));
         qn10(round(ii*1e3)+1) = qn10(round(ii*1e3)) + 0.001 * (1 / (M10*w10)) * P10(round(ii*1e3)) * sin(w10*(i-ii));
     end
-    uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1)+ VV(:,4) * qn4(round(ii*1e3)+1)+ VV(:,5) * qn5(round(ii*1e3)+1)+ VV(:,6) * qn6(round(ii*1e3)+1)+ VV(:,7) * qn7(round(ii*1e3)+1)+ VV(:,8) * qn8(round(ii*1e3)+1)+ VV(:,9) * qn9(round(ii*1e3)+1)+ VV(:,10) * qn10(round(ii*1e3)+1);
+    uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1)...
+        + VV(:,4) * qn4(round(ii*1e3)+1)+ VV(:,5) * qn5(round(ii*1e3)+1)+ VV(:,6) * qn6(round(ii*1e3)+1)...
+        + VV(:,7) * qn7(round(ii*1e3)+1)+ VV(:,8) * qn8(round(ii*1e3)+1)+ VV(:,9) * qn9(round(ii*1e3)+1)...
+        + VV(:,10) * qn10(round(ii*1e3)+1);
 end
 
 %***********************************************************************************%
