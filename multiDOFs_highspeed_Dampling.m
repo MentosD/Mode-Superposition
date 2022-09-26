@@ -27,7 +27,7 @@ for i = 1:length(M)
     VV(:,i) = VV(:,i)/VV(length(M),i);
 end
 
-order = 500;
+order = 10;
 
 Mn = VV' * M * VV;
 for i = 1:order
