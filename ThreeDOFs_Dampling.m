@@ -1,10 +1,10 @@
-%%振型叠加法
+%%振型叠加法-含阻尼
 
 clear
 % clc
 
 load("ACC_el.mat");
-% ACC_el = ACC_el(1:30000,:);
+ACC_el = ACC_el(1:10000,:);
 
 M = [2 0 0;
     0 1.5 0
@@ -12,6 +12,7 @@ M = [2 0 0;
 K = 600* [5 -2 0;
     -2 3 -1;
     0 -1 1];
+ksi = 0.005;
 diagM = diag(M);
 [V,D]=eig(inv(M)*K);
 freq=diag(D).^0.5;
@@ -21,9 +22,9 @@ fsc=wsc/2/pi;                           %频率 Hz
 V=V(:,ord);                             %振型按频率阶数排序  一阶振型是第一列
 
 VV = V(:,1:3);                                                      %调整阶数
-VV(:,1) = VV(:,1)/VV(3,1);
-VV(:,2) = VV(:,2)/VV(3,2);
-VV(:,3) = VV(:,3)/VV(3,3);
+% VV(:,1) = VV(:,1)/VV(3,1);
+% VV(:,2) = VV(:,2)/VV(3,2);
+% VV(:,3) = VV(:,3)/VV(3,3);
 
 Mn = VV' * M * VV;
 M1 = VV(:,1)' * M * VV(:,1);
@@ -43,25 +44,21 @@ w3 = sqrt(K3/M3);
 wn = real(wn);
 Phi_ = Mn^(-1) * VV' * M;
 PhiT_ = M * VV * Mn^(-1);
-Cn = 2 * 0.005 * wn * Mn;
-C = PhiT_ * Cn * Phi_;
-C = zeros(3,3);
+Cn = 2 * ksi * wn * Mn;
+% C = PhiT_ * Cn * Phi_;
+Rayleigh_A0 = ((2 * ksi) * (w1 * w2)) / (w1 + w2);
+Rayleigh_A1 = ((2 * ksi) * 1) / (w1 + w2);
+C = Rayleigh_A0 * M +  Rayleigh_A1 * K;                            %用瑞丽阻尼
+wDn = wn * sqrt(1-ksi^2);
 
-
-
-% Pn1 = (VV(:,1)' * (ACC_el(i, 2) * [1;1;1]));
-% Pn2 = (VV(:,2)' * (ACC_el(i, 2) * [1;1;1]));
-% Pn3 = (VV(:,3)' * (ACC_el(i, 2) * [1;1;1]));
-
+wDn1 = w1 * sqrt(1-ksi^2);
+wDn2 = w2 * sqrt(1-ksi^2);
+wDn3 = w3 * sqrt(1-ksi^2);
 
 qn1 = zeros(length(ACC_el),1);
 qn2 = zeros(length(ACC_el),1);
 qn3 = zeros(length(ACC_el),1);
 uu = zeros(3,length(ACC_el));
-
-% wd1 = w1 * sqrt(1-0.05^2);
-% wd2 = w2 * sqrt(1-0.05^2);
-% wd3 = w3 * sqrt(1-0.05^2);
 
 for i = 1:length(ACC_el)
     P1(:,i) = VV(:,1)' * (ACC_el(i, 2) * diagM);
@@ -72,15 +69,14 @@ end
 for i = 0.001:0.001:length(ACC_el)*0.001
 i
     for ii = 0.001:0.001:i
-        qn1(round(ii*1e3)+1) = qn1(round(ii*1e3)) + 0.001 * (1 / (M1*w1)) * P1(round(ii*1e3)) * sin(w1*(i-ii));
-        qn2(round(ii*1e3)+1) = qn2(round(ii*1e3)) + 0.001 * (1 / (M2*w2)) * P2(round(ii*1e3)) * sin(w2*(i-ii));
-        qn3(round(ii*1e3)+1) = qn3(round(ii*1e3)) + 0.001 * (1 / (M3*w3)) * P3(round(ii*1e3)) * sin(w3*(i-ii));
+        qn1(round(ii*1e3)+1) = qn1(round(ii*1e3)) + 0.001 * (1 / (M1*wDn1)) * exp(-ksi * w1 * (i-ii)) * P1(round(ii*1e3)) * sin(wDn1*(i-ii));
+        qn2(round(ii*1e3)+1) = qn2(round(ii*1e3)) + 0.001 * (1 / (M2*wDn2)) * exp(-ksi * w2 * (i-ii)) * P2(round(ii*1e3)) * sin(wDn2*(i-ii));
+        qn3(round(ii*1e3)+1) = qn3(round(ii*1e3)) + 0.001 * (1 / (M3*wDn3)) * exp(-ksi * w3 * (i-ii)) * P3(round(ii*1e3)) * sin(wDn3*(i-ii));
     end
     uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1);
 end
 
 %***********************************************************************************%
-C = zeros(3,3);
 dofs = length(M);
 diagM = diag(M);
 dt = 0.001;
@@ -99,7 +95,6 @@ for i = 2 : length(ACC_el)
 end
 ucdm = u;
 %******************************************************************************%
-C = zeros(3,3);
 alpha = 0.25;
 beta = 0.5;
 dt = 0.001;
