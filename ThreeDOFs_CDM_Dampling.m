@@ -13,6 +13,7 @@ K = 600* [5 -2 0;
     -2 3 -1;
     0 -1 1];
 ksi = 0.005;
+dt = 0.001;
 diagM = diag(M);
 [V,D]=eig(inv(M)*K);
 freq=diag(D).^0.5;
@@ -45,16 +46,19 @@ wn = real(wn);
 Phi_ = Mn^(-1) * VV' * M;
 PhiT_ = M * VV * Mn^(-1);
 Cn = 2 * ksi * wn * Mn;
+
 % C = PhiT_ * Cn * Phi_;
 Rayleigh_A0 = ((2 * ksi) * (w1 * w2)) / (w1 + w2);
 Rayleigh_A1 = ((2 * ksi) * 1) / (w1 + w2);
 C = Rayleigh_A0 * M +  Rayleigh_A1 * K;                            %用瑞丽阻尼
 wDn = wn * sqrt(1-ksi^2);
+Cn = VV' * C * VV;
 
 wDn1 = w1 * sqrt(1-ksi^2);
 wDn2 = w2 * sqrt(1-ksi^2);
 wDn3 = w3 * sqrt(1-ksi^2);
 
+qn= zeros(3,length(ACC_el));
 qn1 = zeros(length(ACC_el),1);
 qn2 = zeros(length(ACC_el),1);
 qn3 = zeros(length(ACC_el),1);
@@ -66,15 +70,24 @@ for i = 1:length(ACC_el)
     P3(:,i) = VV(:,3)' * (ACC_el(i, 2) * diagM);
 end
 
-for i = 0.001:0.001:length(ACC_el)*0.001
-i
-    for ii = 0.001:0.001:i
-        qn1(round(ii*1e3)+1) = qn1(round(ii*1e3)) + 0.001 * (1 / (M1*wDn1)) * exp(-ksi * w1 * (i-ii)) * P1(round(ii*1e3)) * sin(wDn1*(i-ii));
-        qn2(round(ii*1e3)+1) = qn2(round(ii*1e3)) + 0.001 * (1 / (M2*wDn2)) * exp(-ksi * w2 * (i-ii)) * P2(round(ii*1e3)) * sin(wDn2*(i-ii));
-        qn3(round(ii*1e3)+1) = qn3(round(ii*1e3)) + 0.001 * (1 / (M3*wDn3)) * exp(-ksi * w3 * (i-ii)) * P3(round(ii*1e3)) * sin(wDn3*(i-ii));
-    end
-    uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1);
+Ken = Mn/(dt^2)+((Cn)/(2*dt));                       
+an = Kn - (2 * Mn) / (dt)^2;
+bn = Mn / dt^2 - Cn / (2*dt);
+diagMn = diag(Mn);
+for i = 2 : length(ACC_el)
+    PPn = [P1(i);P2(i);P3(i)] - an * qn(: , i) - bn * qn(: , i-1);
+    qn(:,i+1)=Ken \ PPn;                            
+    uu(:,i) = VV(:,1) * qn(1,i) + VV(:,2) * qn(2,i) + VV(:,3) * qn(3,i);
 end
+
+% for i = 0.001:0.001:length(ACC_el)*0.001
+%     for ii = 0.001:0.001:i
+%         qn1(round(ii*1e3)+1) = qn1(round(ii*1e3)) + 0.001 * (1 / (M1*wDn1)) * exp(-ksi * w1 * (i-ii)) * P1(round(ii*1e3)) * sin(wDn1*(i-ii));
+%         qn2(round(ii*1e3)+1) = qn2(round(ii*1e3)) + 0.001 * (1 / (M2*wDn2)) * exp(-ksi * w2 * (i-ii)) * P2(round(ii*1e3)) * sin(wDn2*(i-ii));
+%         qn3(round(ii*1e3)+1) = qn3(round(ii*1e3)) + 0.001 * (1 / (M3*wDn3)) * exp(-ksi * w3 * (i-ii)) * P3(round(ii*1e3)) * sin(wDn3*(i-ii));
+%     end
+%     uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1);
+% end
 
 %***********************************************************************************%
 dofs = length(M);
