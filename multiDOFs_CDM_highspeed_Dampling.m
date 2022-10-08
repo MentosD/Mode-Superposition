@@ -12,22 +12,23 @@ load("ACC_el.mat");
 %     -2 3 -1;
 %     0 -1 1];
 ACC_el = ACC_el(1:10000,:);
-dt = 0.001;
-ksi = 0.05;
+dt = 0.05;
+ksi = 0.00;
 order = 10;
 
 diagM = diag(M);
-[V,D]=eig(inv(M)*K);
+% [V,D]=eig(inv(M)*K);
+[V,D]=eig(M\K);
 freq=diag(D).^0.5;
 [Bc,ord] = sort(freq);                                                       %ord为记录顺序的向量
 wsc=freq(ord);                                                               %角（圆）频率 rad/s
 fsc=wsc/2/pi;                                                                %频率 Hz
 V=V(:,ord);                                                                  %振型按频率阶数排序  一阶振型是第一列
 V = real(V);
-VV = V(:,1:order);                                                       %调整阶数
-for i = 1:order
-    VV(:,i) = VV(:,i)/VV(length(M),i);
-end
+VV = V(:,1:order);                                                           %调整阶数
+% for i = 1:order
+%     VV(:,i) = VV(:,i)/VV(length(M),i);
+% end
 
 for i = 1:order
     i = i;
@@ -67,7 +68,7 @@ Rayleigh_A1 = ((2 * ksi) * 1) / (w1 + w2);
 % C = PhiT_ * Cn * Phi_;              
 C = (Rayleigh_A0 * M +  Rayleigh_A1 * K);                            %用瑞丽阻尼
 
-
+load("MCK1215.mat","C");
 Cn = VV(:,1:order)' * C * VV(:,1:order);
 
 for i = 1:order
@@ -88,32 +89,21 @@ an = Kn - (2 * Mn) / (dt)^2;
 bn = Mn / dt^2 - Cn / (2*dt);
 diagMn = diag(Mn);
 qn= zeros(order,length(ACC_el));
-for i = 2 : length(ACC_el)
-    PPn = [P1(i);P2(i);P3(i);P4(i);P5(i);P6(i);P7(i);P8(i);P9(i);P10(i)] - an * qn(: , i) - bn * qn(: , i-1);
-    qn(:,i+1)=Ken \ PPn;                            
-    uu(:,i) = VV(:,1) * qn(1,i) + VV(:,2) * qn(2,i) + VV(:,3) * qn(3,i) + VV(:,4) * qn(4,i) + VV(:,5) * qn(5,i)...
-         + VV(:,6) * qn(6,i) + VV(:,7) * qn(7,i) + VV(:,8) * qn(8,i) + VV(:,9) * qn(9,i) + VV(:,10) * qn(10,i);
+
+for i = 1:order
+    eval(['PPP(i,:) = P',num2str(i),';']);
 end
 
-% for i = 0.001:0.001:length(ACC_el)*0.001
-% i
-%     for ii = 0.001:0.001:i
-%         qn1(round(ii*1e3)+1) = qn1(round(ii*1e3)) + 0.001 * (1 / (M1*wDn1)) * exp(-ksi * w1 * (i-ii)) * P1(round(ii*1e3)) * sin(wDn1*(i-ii));
-%         qn2(round(ii*1e3)+1) = qn2(round(ii*1e3)) + 0.001 * (1 / (M2*wDn2)) * exp(-ksi * w2 * (i-ii)) * P2(round(ii*1e3)) * sin(wDn2*(i-ii));
-%         qn3(round(ii*1e3)+1) = qn3(round(ii*1e3)) + 0.001 * (1 / (M3*wDn3)) * exp(-ksi * w3 * (i-ii)) * P3(round(ii*1e3)) * sin(wDn3*(i-ii));
-%         qn4(round(ii*1e3)+1) = qn4(round(ii*1e3)) + 0.001 * (1 / (M4*wDn4)) * exp(-ksi * w4 * (i-ii)) * P4(round(ii*1e3)) * sin(wDn4*(i-ii));
-%         qn5(round(ii*1e3)+1) = qn5(round(ii*1e3)) + 0.001 * (1 / (M5*wDn5)) * exp(-ksi * w5 * (i-ii)) * P5(round(ii*1e3)) * sin(wDn5*(i-ii));
-%         qn6(round(ii*1e3)+1) = qn6(round(ii*1e3)) + 0.001 * (1 / (M6*wDn6)) * exp(-ksi * w6 * (i-ii)) * P6(round(ii*1e3)) * sin(wDn6*(i-ii));
-%         qn7(round(ii*1e3)+1) = qn7(round(ii*1e3)) + 0.001 * (1 / (M7*wDn7)) * exp(-ksi * w7 * (i-ii)) * P7(round(ii*1e3)) * sin(wDn7*(i-ii));
-%         qn8(round(ii*1e3)+1) = qn8(round(ii*1e3)) + 0.001 * (1 / (M8*wDn8)) * exp(-ksi * w8 * (i-ii)) * P8(round(ii*1e3)) * sin(wDn8*(i-ii));
-%         qn9(round(ii*1e3)+1) = qn9(round(ii*1e3)) + 0.001 * (1 / (M9*wDn9)) * exp(-ksi * w9 * (i-ii)) * P9(round(ii*1e3)) * sin(wDn9*(i-ii));
-%         qn10(round(ii*1e3)+1) = qn10(round(ii*1e3)) + 0.001 * (1 / (M10*wDn10)) * exp(-ksi * w10 * (i-ii)) * P10(round(ii*1e3)) * sin(wDn10*(i-ii));
-%     end
-%     uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1)...
-%         + VV(:,4) * qn4(round(ii*1e3)+1)+ VV(:,5) * qn5(round(ii*1e3)+1)+ VV(:,6) * qn6(round(ii*1e3)+1)...
-%         + VV(:,7) * qn7(round(ii*1e3)+1)+ VV(:,8) * qn8(round(ii*1e3)+1)+ VV(:,9) * qn9(round(ii*1e3)+1)...
-%         + VV(:,10) * qn10(round(ii*1e3)+1);
-% end
+for i = 2 : length(ACC_el)
+    PPn = PPP(:, i) - an * qn(: , i) - bn * qn(: , i-1);
+    qn(:,i+1)=Ken \ PPn;                            
+    for iiii = 1:order
+        eval(['uu(:,i) = uu(:,i) + VV(:,',num2str(iiii),') * qn(',num2str(iiii),',i);']);
+    end
+end
+plot(real(uu(1,:)),'linewidth',2);
+
+
 %***********************************************************************************%
 tic;
 dofs = length(M);
@@ -126,15 +116,15 @@ b=M/dt^2 - C/(2*dt);
 u = zeros(dofs , length(ACC_el));
 v = zeros(dofs , length(ACC_el));
 ac = zeros(dofs , length(ACC_el));
-ACC_el = gpuArray(ACC_el);
-diagM = gpuArray(diagM);
-a = gpuArray(a);
-b = gpuArray(b);
-u = gpuArray(u);
-v = gpuArray(v);
-ac = gpuArray(ac);
-Ke = gpuArray(Ke);
-PP = gpuArray(zeros(length(Mn),1));
+% ACC_el = gpuArray(ACC_el);
+% diagM = gpuArray(diagM);
+% a = gpuArray(a);
+% b = gpuArray(b);
+% u = gpuArray(u);
+% v = gpuArray(v);
+% ac = gpuArray(ac);
+% Ke = gpuArray(Ke);
+% PP = gpuArray(zeros(length(Mn),1));
 
 for i = 2 : length(ACC_el)
     i
@@ -144,7 +134,7 @@ for i = 2 : length(ACC_el)
     ac(: , i) = (u(: , i+1) - 2 * u(: , i) + u(: , i-1)) / (dt^2);
 end
 ucdm = u;
-ucdm = gather(ucdm);
+% ucdm = gather(ucdm);
 tCDM = toc;
 %******************************************************************************%
 tic;
@@ -161,16 +151,16 @@ a6 = (dt * (1 - beta));
 a7 = (dt * beta);
 Ke = K + a0 * M + a1 * C;
 Kev = inv(Ke);
-alpha = gpuArray(alpha);
-beta = gpuArray(beta);
-a1 = gpuArray(a1);
-a2 = gpuArray(a2);
-a3 = gpuArray(a3);
-a4 = gpuArray(a4);
-a5 = gpuArray(a5);
-a6 = gpuArray(a6);
-a7 = gpuArray(a7);
-Ke = gpuArray(Ke);
+% alpha = gpuArray(alpha);
+% beta = gpuArray(beta);
+% a1 = gpuArray(a1);
+% a2 = gpuArray(a2);
+% a3 = gpuArray(a3);
+% a4 = gpuArray(a4);
+% a5 = gpuArray(a5);
+% a6 = gpuArray(a6);
+% a7 = gpuArray(a7);
+% Ke = gpuArray(Ke);
 
 for i = 2:length(ACC_el)
     i
@@ -181,11 +171,11 @@ for i = 2:length(ACC_el)
 end
 
 unmb = u;
-unmb = gather(u);
+% unmb = gather(u);
 tNMB = toc;
 %**********************************************************************%
 
-plot(real(uu(1,:)),'linewidth',2);
+plot(real(uu(1,:)/207),'linewidth',2);
 hold on;
 plot(real(ucdm(1,:)),'linewidth',2);
 hold on;

@@ -11,10 +11,10 @@ load("ACC_el.mat");
 % K = 600* [5 -2 0;
 %     -2 3 -1;
 %     0 -1 1];
-ACC_el = ACC_el(1:10000,:);
+ACC_el = ACC_el(1:500,:);
 dt = 0.05;
 ksi = 0.00;
-order = 10;
+order = 3;
 
 diagM = diag(M);
 [V,D]=eig(inv(M)*K);
@@ -88,40 +88,12 @@ an = Kn - (2 * Mn) / (dt)^2;
 bn = Mn / dt^2 - Cn / (2*dt);
 diagMn = diag(Mn);
 qn= zeros(order,length(ACC_el));
-
-for i = 1:order
-    eval(['PPP(i,:) = P',num2str(i),';']);
-end
-
 for i = 2 : length(ACC_el)
-    PPn = PPP(:, i) - an * qn(: , i) - bn * qn(: , i-1);
+    PPn = [P1(i);P2(i);P3(i)] - an * qn(: , i) - bn * qn(: , i-1);
     qn(:,i+1)=Ken \ PPn;                            
-    uu(:,i) = VV(:,1) * qn(1,i) + VV(:,2) * qn(2,i) + VV(:,3) * qn(3,i) + VV(:,4) * qn(4,i) + VV(:,5) * qn(5,i)...
-         + VV(:,6) * qn(6,i) + VV(:,7) * qn(7,i) + VV(:,8) * qn(8,i) + VV(:,9) * qn(9,i) + VV(:,10) * qn(10,i);
-    for iiii = 1:order
-        eval(['uu(:,i) = uu(:,i) + VV(:,',num2str(iiii),') * qn(',num2str(iiii),',i);']);
-    end
+    uu(:,i) = VV(:,1) * qn(1,i) + VV(:,2) * qn(2,i) + VV(:,3) * qn(3,i);
 end
 
-% for i = 0.001:0.001:length(ACC_el)*0.001
-% i
-%     for ii = 0.001:0.001:i
-%         qn1(round(ii*1e3)+1) = qn1(round(ii*1e3)) + 0.001 * (1 / (M1*wDn1)) * exp(-ksi * w1 * (i-ii)) * P1(round(ii*1e3)) * sin(wDn1*(i-ii));
-%         qn2(round(ii*1e3)+1) = qn2(round(ii*1e3)) + 0.001 * (1 / (M2*wDn2)) * exp(-ksi * w2 * (i-ii)) * P2(round(ii*1e3)) * sin(wDn2*(i-ii));
-%         qn3(round(ii*1e3)+1) = qn3(round(ii*1e3)) + 0.001 * (1 / (M3*wDn3)) * exp(-ksi * w3 * (i-ii)) * P3(round(ii*1e3)) * sin(wDn3*(i-ii));
-%         qn4(round(ii*1e3)+1) = qn4(round(ii*1e3)) + 0.001 * (1 / (M4*wDn4)) * exp(-ksi * w4 * (i-ii)) * P4(round(ii*1e3)) * sin(wDn4*(i-ii));
-%         qn5(round(ii*1e3)+1) = qn5(round(ii*1e3)) + 0.001 * (1 / (M5*wDn5)) * exp(-ksi * w5 * (i-ii)) * P5(round(ii*1e3)) * sin(wDn5*(i-ii));
-%         qn6(round(ii*1e3)+1) = qn6(round(ii*1e3)) + 0.001 * (1 / (M6*wDn6)) * exp(-ksi * w6 * (i-ii)) * P6(round(ii*1e3)) * sin(wDn6*(i-ii));
-%         qn7(round(ii*1e3)+1) = qn7(round(ii*1e3)) + 0.001 * (1 / (M7*wDn7)) * exp(-ksi * w7 * (i-ii)) * P7(round(ii*1e3)) * sin(wDn7*(i-ii));
-%         qn8(round(ii*1e3)+1) = qn8(round(ii*1e3)) + 0.001 * (1 / (M8*wDn8)) * exp(-ksi * w8 * (i-ii)) * P8(round(ii*1e3)) * sin(wDn8*(i-ii));
-%         qn9(round(ii*1e3)+1) = qn9(round(ii*1e3)) + 0.001 * (1 / (M9*wDn9)) * exp(-ksi * w9 * (i-ii)) * P9(round(ii*1e3)) * sin(wDn9*(i-ii));
-%         qn10(round(ii*1e3)+1) = qn10(round(ii*1e3)) + 0.001 * (1 / (M10*wDn10)) * exp(-ksi * w10 * (i-ii)) * P10(round(ii*1e3)) * sin(wDn10*(i-ii));
-%     end
-%     uu(:,round(ii*1e3)) = VV(:,1) * qn1(round(ii*1e3)+1) + VV(:,2) * qn2(round(ii*1e3)+1) + VV(:,3) * qn3(round(ii*1e3)+1)...
-%         + VV(:,4) * qn4(round(ii*1e3)+1)+ VV(:,5) * qn5(round(ii*1e3)+1)+ VV(:,6) * qn6(round(ii*1e3)+1)...
-%         + VV(:,7) * qn7(round(ii*1e3)+1)+ VV(:,8) * qn8(round(ii*1e3)+1)+ VV(:,9) * qn9(round(ii*1e3)+1)...
-%         + VV(:,10) * qn10(round(ii*1e3)+1);
-% end
 %***********************************************************************************%
 tic;
 dofs = length(M);

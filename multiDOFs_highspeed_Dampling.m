@@ -11,7 +11,7 @@ load("ACC_el.mat");
 % K = 600* [5 -2 0;
 %     -2 3 -1;
 %     0 -1 1];
-ACC_el = ACC_el(1:3000,:);
+ACC_el = ACC_el(1:1000,:);
 
 ksi = 0.05;
 diagM = diag(M);
