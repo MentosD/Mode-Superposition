@@ -12,13 +12,11 @@ load("ACC_el.mat");
 %     -2 3 -1;
 %     0 -1 1];
 ACC_el = ACC_el(1:10000,:);
-dt = 0.05;
-ksi = 0.00;
+dt = 0.001;
+ksi = 0.005;
 order = 10;
-
 diagM = diag(M);
-% [V,D]=eig(inv(M)*K);
-[V,D]=eig(M\K);
+[V,D]=eig(inv(M)*K);
 freq=diag(D).^0.5;
 [Bc,ord] = sort(freq);                                                       %ord为记录顺序的向量
 wsc=freq(ord);                                                               %角（圆）频率 rad/s
@@ -26,9 +24,7 @@ fsc=wsc/2/pi;                                                                %�
 V=V(:,ord);                                                                  %振型按频率阶数排序  一阶振型是第一列
 V = real(V);
 VV = V(:,1:order);                                                           %调整阶数
-% for i = 1:order
-%     VV(:,i) = VV(:,i)/VV(length(M),i);
-% end
+
 
 for i = 1:order
     i = i;
@@ -61,15 +57,11 @@ PhiT_ = M * VV * Mn^(-1);
 Cn = 2 * ksi * wn * Mn;
 
 Rayleigh_A0 = ((2 * ksi) * (w1 * w2)) / (w1 + w2);
-% Rayleigh_A0 = ((2 * ksi) * (17.5711 * 17.7796)) / (17.5711 + 17.7796);
 Rayleigh_A1 = ((2 * ksi) * 1) / (w1 + w2);
-% Rayleigh_A1 = ((2 * ksi) * 1) / (17.5711 + 17.7796);
 
 % C = PhiT_ * Cn * Phi_;              
-C = (Rayleigh_A0 * M +  Rayleigh_A1 * K);                            %用瑞丽阻尼
+C = Rayleigh_A0 * M +  Rayleigh_A1 * K;                            %用瑞丽阻尼
 
-load("MCK1215.mat","C");
-Cn = VV(:,1:order)' * C * VV(:,1:order);
 
 for i = 1:order
     eval(['qn',num2str(i),'=zeros(length(ACC_el),1);']);
@@ -175,7 +167,7 @@ unmb = u;
 tNMB = toc;
 %**********************************************************************%
 
-plot(real(uu(1,:)/207),'linewidth',2);
+plot(real(uu(1,:)),'linewidth',2);
 hold on;
 plot(real(ucdm(1,:)),'linewidth',2);
 hold on;
