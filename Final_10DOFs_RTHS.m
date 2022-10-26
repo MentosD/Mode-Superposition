@@ -183,6 +183,7 @@ for i = 2 : length(ACC_el)-1
     end
 end
 
+
 %% 振型叠加法—子结构
 % close all
 M = M_ns;
@@ -257,15 +258,37 @@ ps_weizhi(length(M_ns),1) = 1;
 PACC_el = zeros(length(M_ns),1);
 
 for i = 2 : length(ACC_el)-1
-    [ac_ModeS_ns, v_ModeS_ns, u_ModeS_nsi1] = ModeS(order, VV, diagM, ACC_eli, F_ModeS_ps, ps_weizhi, Ken, an, bn, qni);
 
+    for ii = 1:order
+        PACC_el(ii,i) = VV(:,ii)' * (ACC_el(i, 2) * diagM + F_ModeS_ps(i-1) * ps_weizhi);
+    end
+
+    PPn = -PACC_el(:, i) - an * qn(: , i) - bn * qn(: , i-1);
+    qn(:,i+1)=Ken \ PPn;
+
+    for iiii = 1:order
+        eval(['u_ModeS_ns(:,i+1) = u_ModeS_ns(:,i+1) + VV(:,',num2str(iiii),') * qn(',num2str(iiii),',i+1);']);
+    end
+
+    v_ModeS_ns(:,i) = (u_ModeS_ns(: , i+1) - u_ModeS_ns(: , i-1)) / (dt*2);
+    ac_ModeS_ns(: , i) = (u_ModeS_ns(: , i+1) - 2 * u_ModeS_ns(: , i) + u_ModeS_ns(: , i-1)) / (dt^2);
+
+    PP_ModeS_ps = -(ac_ModeS_ns(length(M_ns),i) + ACC_el(i,2)) * M_ps...
+                  - a_ps * u_ModeS_ps(i) - b_ps * u_ModeS_ps(i-1);
+
+    u_ModeS_ps(i+1) = Ke_ps \ PP_ModeS_ps;
+    v_ModeS_ps(i) = (u_ModeS_ps(i+1) - u_ModeS_ps(i-1)) / (dt*2);
+    ac_ModeS_ps(i) = (u_ModeS_ps(i+1) - 2 * u_ModeS_ps(i) + u_ModeS_ps(i-1)) / (dt^2);
+
+    F_ModeS_ps(i) = (ac_ModeS_ps(i) + ac_ModeS_ns(2,i) + ACC_el(i,2)) * M_ps ;
 end
 
 figure(1)
 plot(u(10,:));
 title('整体结构与子结构10层响应对比')
 hold on;
+plot(ucdm_ps + ucdm_ns(9,:));
+hold on;
 plot(real(uu(10,:)));                                                      %振型叠加法与CDM整体
 hold on;
 plot(u_ModeS_ps + u_ModeS_ns(9,:));
-% ,'linewidth',1

@@ -5,23 +5,18 @@ clear
 % clc
 load("MCK1215.mat","K","M");
 load("ACC_el.mat");
-% M = [2 0 0;
-%     0 1.5 0
-%     0 0 1];
-% K = 600* [5 -2 0;
-%     -2 3 -1;
-%     0 -1 1];
-ACC_el = ACC_el(1:10000,:);
+
+ACC_el = ACC_el(1:2000,:);
 dt = 0.001;
 ksi = 0.005;
 order = 10;
 diagM = diag(M);
 [V,D]=eig(inv(M)*K);
 freq=diag(D).^0.5;
-[Bc,ord] = sort(freq);                                                       %ord为记录顺序的向量
-wsc=freq(ord);                                                               %角（圆）频率 rad/s
-fsc=wsc/2/pi;                                                                %频率 Hz
-V=V(:,ord);                                                                  %振型按频率阶数排序  一阶振型是第一列
+[Bc,ord] = sort(freq);                  %ord为记录顺序的向量
+wsc=freq(ord);                          %角（圆）频率 rad/s
+fsc=wsc/2/pi;                           %频率 Hz
+V=V(:,ord);                             %振型按频率阶数排序  一阶振型是第一列                                                                 %振型按频率阶数排序  一阶振型是第一列
 V = real(V);
 VV = V(:,1:order);                                                           %调整阶数
 

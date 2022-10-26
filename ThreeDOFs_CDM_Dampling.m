@@ -4,7 +4,7 @@ clear
 % clc
 
 load("ACC_el.mat");
-ACC_el = ACC_el(1:1000,:);
+% ACC_el = ACC_el(1:1000,:);
 
 M = [2 0 0;
     0 1.5 0
