@@ -256,15 +256,17 @@ qn= zeros(order,length(ACC_el));
 ps_weizhi = zeros(length(M_ns),1);
 ps_weizhi(length(M_ns),1) = 1;
 PACC_el = zeros(length(M_ns),1);
-
+Ken_inv = inv(Ken);
+Ke_ps_inv = inv(Ke_ps);
 for i = 2 : length(ACC_el)-1
 
-    for ii = 1:order
-        PACC_el(ii,i) = VV(:,ii)' * (ACC_el(i, 2) * diagM + F_ModeS_ps(i-1) * ps_weizhi);
-    end
+%     for ii = 1:order
+%         PACC_el(ii,i) = VV(:,ii)' * (ACC_el(i, 2) * diagM + F_ModeS_ps(i-1) * ps_weizhi);
+%     end
+    PACC_el(:,i) = VV(:,:)' * (ACC_el(i, 2) * diagM + F_ModeS_ps(i-1) * ps_weizhi);
 
     PPn = -PACC_el(:, i) - an * qn(: , i) - bn * qn(: , i-1);
-    qn(:,i+1)=Ken \ PPn;
+    qn(:,i+1)=Ken_inv * PPn;
 
     for iiii = 1:order
         eval(['u_ModeS_ns(:,i+1) = u_ModeS_ns(:,i+1) + VV(:,',num2str(iiii),') * qn(',num2str(iiii),',i+1);']);
@@ -276,7 +278,7 @@ for i = 2 : length(ACC_el)-1
     PP_ModeS_ps = -(ac_ModeS_ns(length(M_ns),i) + ACC_el(i,2)) * M_ps...
                   - a_ps * u_ModeS_ps(i) - b_ps * u_ModeS_ps(i-1);
 
-    u_ModeS_ps(i+1) = Ke_ps \ PP_ModeS_ps;
+    u_ModeS_ps(i+1) = Ke_ps_inv * PP_ModeS_ps;
     v_ModeS_ps(i) = (u_ModeS_ps(i+1) - u_ModeS_ps(i-1)) / (dt*2);
     ac_ModeS_ps(i) = (u_ModeS_ps(i+1) - 2 * u_ModeS_ps(i) + u_ModeS_ps(i-1)) / (dt^2);
 
