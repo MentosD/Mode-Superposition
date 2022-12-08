@@ -55,8 +55,8 @@ Rayleigh_A0 = ((2 * ksi) * (w1 * w2)) / (w1 + w2);
 Rayleigh_A1 = ((2 * ksi) * 1) / (w1 + w2);
 
 % C = PhiT_ * Cn * Phi_;              
-C = Rayleigh_A0 * M +  Rayleigh_A1 * K;                            %用瑞丽阻尼
-
+% C = Rayleigh_A0 * M +  Rayleigh_A1 * K;                            %用瑞丽阻尼
+C = 0.05 * M + 0.05 * K;
 
 for i = 1:order
     eval(['qn',num2str(i),'=zeros(length(ACC_el),1);']);
@@ -116,7 +116,7 @@ ac = zeros(dofs , length(ACC_el));
 for i = 2 : length(ACC_el)
     i
     PP = ACC_el(i,2)* diagM  - a * u(: , i) - b * u(: , i-1);
-    u(:,i+1)=Ke \ PP;                            
+    u(:,i+1)=Kev * PP;                            
     v(: , i) = (u(: , i+1) - u(: , i-1)) / (dt*2);
     ac(: , i) = (u(: , i+1) - 2 * u(: , i) + u(: , i-1)) / (dt^2);
 end
@@ -152,7 +152,7 @@ Kev = inv(Ke);
 for i = 2:length(ACC_el)
     i
     PP = ACC_el(i,2)* diagM  + M * (a0 * u(:,i-1) + a2 * v(:,i-1) + a3 * ac(:,i-1)) + C * (a1 * u(:,i-1) + a4 * v(:,i-1) + a5 * ac(:,i-1));
-    u(:,i) = Ke \ PP;
+    u(:,i) = Kev * PP;
     ac(: , i) = a0 * (u(: , i) - u(: , i-1)) - a3 * ac(: , i-1) - a2 * v(: , i-1);
     v(: , i)= v(: , i-1) + a6 * ac(: , i-1) + a7 * ac(: , i);
 end
